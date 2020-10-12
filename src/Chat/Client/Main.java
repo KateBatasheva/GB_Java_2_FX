@@ -1,4 +1,4 @@
-package sample;
+package Chat.Client;
 
 import javafx.application.Application;
 

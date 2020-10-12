@@ -1,0 +1,47 @@
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.HBox?>
+<?import java.net.URL?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.layout.VBox?>
+<BorderPane fx:controller="Chat.Client.Controller"
+            xmlns:fx="http://javafx.com/fxml"  >
+    <stylesheets>
+        <URL value="@/css/style.css"/>
+    </stylesheets>
+    <top>
+        <MenuBar>
+            <Menu text="Menu">
+                <MenuItem text="New chat"/>
+                <MenuItem text="Settings"/>
+                <MenuItem text="Close" fx:id="mi_close" onAction="#mi_close"/>
+            </Menu>
+        </MenuBar>
+    </top>
+    <center>
+        <VBox>
+        <HBox fx:id="hb_authPanel">
+            <TextField fx:id="tf_login" promptText="login" HBox.hgrow="ALWAYS" />
+            <PasswordField fx:id="pf_password" promptText="password" onAction="#tryToEnter" HBox.hgrow="ALWAYS" />
+            <Button fx:id="B_enter" text="enter" onAction="#tryToEnter" minWidth="70"/>
+        </HBox>
+        <HBox fx:id="hb_mainPanel" visible="true">
+            <TextArea fx:id="ta_mainField" prefWidth="500" prefHeight="400" editable="false" />
+        </HBox>
+        </VBox>
+    </center>
+    <bottom>
+        <HBox fx:id="hb_sendMess" alignment="TOP_LEFT" spacing="35" visible="false">
+            <TextField fx:id="tf_message" promptText="input your message here..." prefWidth="450"
+                       alignment="TOP_LEFT" onAction="#clickSent"/>
+            <Button text="Sent" fx:id="b_sent"
+                    onAction="#clickSent"/>
+        </HBox>
+    </bottom>
+</BorderPane>

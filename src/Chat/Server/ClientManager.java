@@ -1,5 +1,7 @@
 package Chat.Server;
 
+import Chat.Client.Controller;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -11,9 +13,10 @@ public class ClientManager {
     Server server;
     Socket socket;
 
-
     private String nick;
     private String login;
+
+    private SimpleAuth authUser;
 
     public ClientManager(Server server, Socket socket) {
         try {
@@ -36,6 +39,7 @@ public class ClientManager {
                             if (newNick != null){
                                 nick = newNick;
                                 server.subscribe(this);
+                                server.castMess(this, null, "*** join chat ***\n");
                                 sentMessage("/auth_ok "+ newNick);
                                 break;
                            } else {
@@ -47,16 +51,27 @@ public class ClientManager {
 
                     while (true) {
                         String mess = in.readUTF();
-                        if (mess.equals("/exit")) {
-                            sentMessage("/exit");
+                        if (mess.startsWith("/exit")) {
                             break;
                         }
-                        server.castMess(this, mess);
+                        ClientManager receiver = null;
+                        if (mess.startsWith("/w")){
+                            String[] privat = mess.split("\\s");
+                            receiver = server.getClient (privat[1]);
+                            if (receiver == null){
+                                mess = "Invalid nickname or request";
+                                ClientManager.this.sentMessage(mess);
+                                continue;
+                            }
+                        }
+                        server.castMess(this, receiver, mess);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     server.unsubscribe(this);
+                    server.castMess(this, null, "*** left chat ***\n");
+                    System.out.println("Client is disconnected");
                     try {
                         socket.close();
                         in.close();

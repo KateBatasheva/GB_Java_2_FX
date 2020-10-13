@@ -13,7 +13,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -106,7 +105,7 @@ public class Controller implements Initializable {
                     // work step
                     while (true) {
                         String mess = in.readUTF();
-                        if (mess.equals("/exit")){
+                        if (mess.startsWith("/exit")){
                             break;
                         }
                         ta_mainField.appendText(mess);

@@ -26,7 +26,7 @@ public class ClientManager {
 
             new Thread(() -> {
                 try {
-                    socket.setSoTimeout(5000);
+                    socket.setSoTimeout(120000);
 
                     // authentication step
                     while (true) {

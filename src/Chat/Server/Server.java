@@ -4,7 +4,6 @@ package Chat.Server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -45,7 +44,9 @@ public void castMess (ClientManager sender, ClientManager reciever, String messa
         String [] words = message.split("\\s");
         message = message.substring(words[0].toCharArray().length + words[1].toCharArray().length+1);
         String mess = String.format("[ %s - private to %s ]: %s", sender.getNickname(), reciever.getNickname(), message);
-        reciever.sentMessage(mess);
+        if (!reciever.getNickname().equals(sender.getNickname())) {
+            reciever.sentMessage(mess);
+        }
         sender.sentMessage(mess);
     } else {
         String mess = String.format("[ %s ]: %s", sender.getNickname(), message);
@@ -54,11 +55,26 @@ public void castMess (ClientManager sender, ClientManager reciever, String messa
         }
     }
 }
+public void castClients (){
+    StringBuilder sb = new StringBuilder(SystemCommands.clients.getCode() + " ");
+    for (ClientManager c : clients) {
+        sb.append(c.getNickname()).append(" ");
+    }
+    sb.setLength(sb.length()-1);
+    String message = sb.toString();
+    for (ClientManager client : clients) {
+        client.sentMessage(message);
+    }
+}
+
+
 public void subscribe (ClientManager client) {
     clients.add(client);
+    castClients();
 }
 public void unsubscribe (ClientManager client) {
         clients.remove(client);
+
     }
 
     public Autherization getAuth() {
@@ -70,5 +86,13 @@ public void unsubscribe (ClientManager client) {
                 return c;
             }
         } return null;
+    }
+
+    public boolean isAuth (String login){
+        for (ClientManager c : clients) {
+            if(c.getLogin().equals(login)){
+                return true;
+            }
+        } return false;
     }
 }

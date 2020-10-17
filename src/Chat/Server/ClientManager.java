@@ -1,11 +1,10 @@
 package Chat.Server;
 
-import Chat.Client.Controller;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public class ClientManager {
     DataInputStream in;
@@ -27,38 +26,59 @@ public class ClientManager {
 
             new Thread(() -> {
                 try {
-                // authentication step
-                while (true) {
-                    String mess = in.readUTF();
-                    if (mess.startsWith("/auth")){
-                        String[] tocken = mess.split("\\s");
-                            if (tocken.length <3) {
+                    socket.setSoTimeout(5000);
+
+                    // authentication step
+                    while (true) {
+                        String mess = in.readUTF();
+                        if (mess.startsWith(SystemCommands.register.getCode())) {
+                            String[] tocken = mess.split("\\s");
+                            if (tocken.length < 4) {
+                                continue;
+                            }
+                            boolean b = server.getAuth().registr(tocken[1], tocken[2], tocken[3]);
+                            if (b) {
+                                sentMessage(SystemCommands.registrOK.getCode());
+                            } else {
+                                sentMessage(SystemCommands.registrNO.getCode());
+                            }
+                        }
+
+                        if (mess.startsWith(SystemCommands.auth.getCode())) {
+                            String[] tocken = mess.split("\\s");
+                            if (tocken.length < 3) {
                                 continue;
                             }
                             String newNick = server.getAuth().getNick(tocken[1], tocken[2]);
-                            if (newNick != null){
-                                nick = newNick;
-                                server.subscribe(this);
-                                server.castMess(this, null, "*** join chat ***\n");
-                                sentMessage("/auth_ok "+ newNick);
-                                break;
-                           } else {
+                            if (newNick != null) {
+                                login = tocken[1];
+                                if (!server.isAuth(login)) {
+                                    nick = newNick;
+                                    sentMessage(SystemCommands.authok.getCode() + " " + newNick);
+                                    server.subscribe(this);
+                                    server.castMess(this, null, "*** join chat ***\n");
+                                    break;
+                                } else {
+                                    sentMessage("Login is already used");
+                                }
+                            } else {
                                 sentMessage("invalid login/ password");
                             }
+                        }
                     }
-                }
-                // work step
+                    // work step
 
                     while (true) {
+                        socket.setSoTimeout(0);
                         String mess = in.readUTF();
-                        if (mess.startsWith("/exit")) {
+                        if (mess.startsWith(SystemCommands.exit.getCode())) {
                             break;
                         }
                         ClientManager receiver = null;
-                        if (mess.startsWith("/w")){
+                        if (mess.startsWith(SystemCommands.write.getCode())) {
                             String[] privat = mess.split("\\s");
-                            receiver = server.getClient (privat[1]);
-                            if (receiver == null){
+                            receiver = server.getClient(privat[1]);
+                            if (receiver == null) {
                                 mess = "Invalid nickname or request";
                                 ClientManager.this.sentMessage(mess);
                                 continue;
@@ -66,7 +86,12 @@ public class ClientManager {
                         }
                         server.castMess(this, receiver, mess);
                     }
-                } catch (IOException e) {
+                } catch (SocketTimeoutException a) {
+                    sentMessage(SystemCommands.exit.getCode());
+                    sentMessage(SystemCommands.timeout.getCode());
+                    a.printStackTrace();
+                }
+                catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     server.unsubscribe(this);
@@ -98,6 +123,9 @@ public class ClientManager {
         return nick;
     }
 
+    public String getLogin() {
+        return login;
+    }
 }
 
 

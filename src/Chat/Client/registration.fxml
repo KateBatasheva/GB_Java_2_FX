@@ -1,0 +1,27 @@
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.HBox?>
+<?import java.net.URL?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Label?>
+<VBox fx:controller="Chat.Client.Registration"
+      xmlns:fx="http://javafx.com/fxml">
+    <stylesheets>
+        <URL value="@/css/style.css"/>
+    </stylesheets>
+    <Label text="login"/>
+    <TextField fx:id="tf_loginField" promptText="login" VBox.vgrow="ALWAYS" prefWidth="300"/>
+    <Label text="password"/>
+    <PasswordField fx:id="pf_password" promptText="password" VBox.vgrow="ALWAYS" prefWidth="300"/>
+    <Label text="nick"/>
+    <TextField fx:id="tf_nickField" promptText="nick" VBox.vgrow="ALWAYS" prefWidth="300"/>
+    <TextArea fx:id="ta_mainmessage" editable="false" VBox.vgrow="ALWAYS" prefWidth="300"/>
+    <Button fx:id="B_reg" text="enter" minWidth="60" onMouseClicked="#clickReg"/>
+</VBox>

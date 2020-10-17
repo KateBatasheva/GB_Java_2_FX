@@ -1,12 +1,20 @@
 package Chat.Client;
 
+import Chat.Server.SystemCommands;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -18,6 +26,8 @@ import java.util.ResourceBundle;
 public class Controller implements Initializable {
     @FXML
     public HBox hb_sendMess;
+    @FXML
+    public ListView<String> lv_clients;
     @FXML
     private TextArea ta_mainField;
     @FXML
@@ -46,15 +56,17 @@ public class Controller implements Initializable {
 
     private String nick;
     private Stage stage;
+    private Stage regStage;
+    private Registration registration;
 
     public void setAuthentif (boolean authentif){
         this.authentif = authentif;
         hb_authPanel.setVisible(!authentif);
         hb_authPanel.setManaged(!authentif);
-        hb_mainPanel.setVisible(authentif);
-        hb_mainPanel.setManaged(authentif);
         hb_sendMess.setVisible(authentif);
         hb_sendMess.setManaged(authentif);
+        lv_clients.setVisible(authentif);
+        lv_clients.setManaged(authentif);
 
         if (!authentif){
             nick = "";
@@ -90,27 +102,49 @@ public class Controller implements Initializable {
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
-            new Thread(()->{
+            new Thread(() -> {
                 try {
                     // authentication step
                     while (true) {
                         String mess = in.readUTF();
-                        if (mess.startsWith("/auth_ok")){
+                        if (mess.startsWith(SystemCommands.authok.getCode())){
                             nick = mess.split("\\s")[1];
                             setAuthentif(true);
                             break;
                         }
-//                        ta_mainField.appendText(mess);
+                        if (mess.startsWith(SystemCommands.registrOK.getCode())){
+                            registration.addMess("Registration success\n");
+                        }
+                        if (mess.startsWith(SystemCommands.registrNO.getCode())){
+                            registration.addMess("Registration fail\n Login or nick is used\n");
+                        }
+                        if (mess.startsWith(SystemCommands.timeout.getCode())){
+                            ta_mainField.appendText("Timeout connection\n");
+                        }
                     }
                     // work step
                     while (true) {
                         String mess = in.readUTF();
-                        if (mess.startsWith("/exit")){
-                            break;
+                        if (mess.startsWith("/")){
+                            if (mess.startsWith(SystemCommands.exit.getCode())){
+                                break;
                         }
-                        ta_mainField.appendText(mess);
+                            if (mess.startsWith(SystemCommands.clients.getCode())){
+                                String [] tockens = mess.split("\\s");
+                                Platform.runLater(()->
+                                {
+                                    lv_clients.getItems().clear();
+                                    for (int i = 1; i <tockens.length ; i++) {
+                                        lv_clients.getItems().add(tockens[i]);
+                                    }
+                                });
+                            }
+
+                            } else {
+                            ta_mainField.appendText(mess);
+                        }
                     }
-                } catch (IOException e) {
+                }  catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     setAuthentif(false);
@@ -130,9 +164,35 @@ public class Controller implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         Platform.runLater(()-> {
             stage = ((Stage) ta_mainField.getScene().getWindow());
-
+            stage.setOnCloseRequest(event -> {
+                if (socket != null && !socket.isClosed()){
+                    try {
+                        out.writeUTF(SystemCommands.exit.getCode());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         });
         setAuthentif(false);
+        regWindow();
+    }
+
+    private void regWindow() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("registration.fxml"));
+            Parent root  = fxmlLoader.load();
+            regStage = new Stage();
+            regStage.setTitle("Registration");
+            regStage.setScene(new Scene(root, 500, 350));
+            regStage.initModality(Modality.APPLICATION_MODAL);
+
+            registration = fxmlLoader.getController();
+            registration.setController(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void tryToEnter(ActionEvent actionEvent) {
@@ -153,4 +213,25 @@ private void setTittle (String tittle){
         });
 }
 
+    public void clickPrivat(MouseEvent mouseEvent) {
+        tf_message.setText(String.format("%s %s ", SystemCommands.write.getCode(), lv_clients.getSelectionModel().getSelectedItem()));
+    }
+
+    public void regWindowShow (ActionEvent actionEvent) {
+        regStage.show();
+
+    }
+
+    public void tryRegistr (String login, String password, String nick){
+        String mes = String.format("%s %s %s %s", SystemCommands.register.getCode(), login, password, nick);
+
+        if (socket == null || socket.isClosed()){
+            connect();
+        }
+        try {
+            out.writeUTF(mes);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

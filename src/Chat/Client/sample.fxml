@@ -10,6 +10,7 @@
 <?import java.net.URL?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ListView?>
 <BorderPane fx:controller="Chat.Client.Controller"
             xmlns:fx="http://javafx.com/fxml"  >
     <stylesheets>
@@ -30,9 +31,11 @@
             <TextField fx:id="tf_login" promptText="login" HBox.hgrow="ALWAYS" />
             <PasswordField fx:id="pf_password" promptText="password" onAction="#tryToEnter" HBox.hgrow="ALWAYS" />
             <Button fx:id="B_enter" text="enter" onAction="#tryToEnter" minWidth="70"/>
+            <Button fx:id="B_reg" text="register" onAction="#regWindowShow" minWidth="70"/>
         </HBox>
-        <HBox fx:id="hb_mainPanel" visible="true">
-            <TextArea fx:id="ta_mainField" prefWidth="500" prefHeight="400" editable="false" />
+        <HBox fx:id="hb_mainPanel" visible="true" VBox.vgrow="ALWAYS">
+            <TextArea fx:id="ta_mainField" HBox.hgrow="ALWAYS" editable="false" />
+            <ListView fx:id="lv_clients" minWidth="60" visible="false" managed="false" onMouseClicked="#clickPrivat"/>
         </HBox>
         </VBox>
     </center>

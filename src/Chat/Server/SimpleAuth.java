@@ -29,6 +29,18 @@ private List<UserData> users;
     }
 
     @Override
+    public boolean registr(String login, String password, String nick) {
+        for (UserData user : users) {
+            if (user.login.equals(login) || user.nick.equals(nick)) {
+                return false;
+            }
+        }
+
+        users.add(new UserData(login, password, nick));
+                return true;
+            }
+
+    @Override
     public String getNick(String login, String password) {
         for (UserData user : users) {
             if (user.login.equals(login) && user.password.equals(password)){
